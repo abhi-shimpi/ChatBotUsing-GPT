@@ -14,8 +14,10 @@
     "openai": "^3.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-speech-kit": "^3.0.1",
     "react-speech-recognition": "^3.10.0",
-    "regenerator-runtime": "^0.13.11"
+    "regenerator-runtime": "^0.13.11",
+    "responsivevoice": "^0.4.1"
   },
   "devDependencies": {
     "@babel/node": "^7.22.5",

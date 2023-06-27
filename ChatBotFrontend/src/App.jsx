@@ -1,14 +1,13 @@
 import 'regenerator-runtime/runtime';
-import { useState ,useEffect ,useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import { Configuration, OpenAIApi } from "openai";
 import axios from "axios";
 import SpeechRecognitionComponent from './SpeechRecognitionComponent';
 
-
 const configuration = new Configuration({
-  organization: "org-1BzQinbEPue60aqRSpqEL5SZ",
-  apiKey: "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",
+  organization: "org-l6uGl5GKM7wKAuIYgmHfJPjo",
+  apiKey: "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",
 });
 const openai = new OpenAIApi(configuration);
 
@@ -16,7 +15,6 @@ function App() {
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-  const formRef = useRef(null);
 
   const headers = {
     "Content-Type": "application/json",
@@ -25,10 +23,10 @@ function App() {
 
   const chat = async (e, message) => {
     e.preventDefault();
-
+    console.log("message", message)
     if (!message) return;
     setIsTyping(true);
-    scrollTo(0,1e10)
+    scrollTo(0, 1e10)
 
     let msgs = chats;
     msgs.push({ role: "user", content: message });
@@ -36,26 +34,30 @@ function App() {
 
     setMessage("");
 
-    axios
-      .post('https://api.openai.com/v1/chat/completions', {
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "user", content: message }],
-        }, { headers })
-          .then((res) => {
-            msgs.push(res.data.choices[0].message);
-            setChats(msgs);
-            setIsTyping(false);
-            scrollTo(0,1e10)
-          })
-          .catch((error) => {
-            console.log(error);
-        });
+    fetch("http://localhost:8000/", {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify({
+        chats,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        msgs.push(data.output);
+        setChats(msgs);
+        setIsTyping(false);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    setMessage("");
   };
 
-  const handleTranscript = (value,listening) => {
+  const handleTranscript = (value) => {
     // Do something with the transcript value received from the child component
     console.log(value);
     setMessage(value);
+    // if(!listening) setMessage(value);
 
   };
 
@@ -63,15 +65,16 @@ function App() {
     // Do something with the listening value received from the child component
     console.log(listening);
   };
-  
+
 
   return (
     <main>
       <h1>Chat AI Tutorial</h1>
 
-      <section>
-        {chats && chats.length
-          ? chats.map((chat, index) => (
+      <div className='chat-section'>
+        <section>
+          {chats && chats.length
+            ? chats.map((chat, index) => (
               <p key={index} className={chat.role === "user" ? "user_msg" : ""}>
                 <span>
                   <b>{chat.role.toUpperCase()}</b>
@@ -80,26 +83,23 @@ function App() {
                 <span>{chat.content}</span>
               </p>
             ))
-          : ""}
-      </section>
+            : ""}
+        </section>
 
-      <div className={isTyping ? "" : "hide"}>
-        <p>
-          <i>{isTyping ? "Typing" : ""}</i>
-        </p>
+        <div className={isTyping ? "" : "hide"}>
+          <p>
+            <i>{isTyping ? "Typing" : ""}</i>
+          </p>
+        </div>
       </div>
       
-      <form action="" onSubmit={(e)=>chat(e,message)}>
-        {/* <input
-          type="text"
-          name="message"
-          value={message}
-          placeholder="Type a message here and hit Enter..."
-          onChange={(e) => setMessage(e.target.value)}
-        /> */}
-        <h1>Voice-to-Text</h1>
-            <SpeechRecognitionComponent onTranscriptChange={handleTranscript} onListeningChange={handleListeningChange}/>
-      </form>
+      <div className='input-fields'>
+        <form action="" onSubmit={(e) => chat(e, message)}>
+          <button className='button' type="submit">Send</button>
+        </form>
+        <SpeechRecognitionComponent onTranscriptChange={handleTranscript} onListeningChange={handleListeningChange} />
+      </div>
+
     </main>
   );
 }
